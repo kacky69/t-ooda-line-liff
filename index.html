@@ -28,11 +28,14 @@
   // 取れなかった場合も、ユーザーID無しのフォームへ案内する（GAS側では氏名で照合される）。
   var LIFF_ID = '2010088280-T8UVyltM';
   var FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSe40qH9zA3McTEXpQQ95BJhgNCMESgOMluzvb7gxbfax1TdgQ/viewform';
-  var ENTRY = '1166822250';
+  var ENTRY = '1166822250';                 // LINE連携用（ユーザーID）
+  var ENTRY_CONTACT = '723589695';          // ご案内方法について（チェックボックス）
+  var CONTACT_DEFAULT = 'LINE連絡';          // LINE から開いた人は「LINE連絡」にチェック済みで開く
   var moved = false;
   function go(userId){
     if (moved) return; moved = true;
-    var url = FORM_URL + (userId ? '?usp=pp_url&entry.' + ENTRY + '=' + encodeURIComponent(userId) : '');
+    var url = FORM_URL + '?usp=pp_url&entry.' + ENTRY_CONTACT + '=' + encodeURIComponent(CONTACT_DEFAULT)
+            + (userId ? '&entry.' + ENTRY + '=' + encodeURIComponent(userId) : '');
     document.getElementById('btn').href = url;
     location.replace(url);
   }
