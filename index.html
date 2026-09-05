@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>東京大田市人会 出欠回答フォームへ移動中…</title>
+<style>
+  body{margin:0;font-family:-apple-system,"Hiragino Sans",sans-serif;background:#14305a;color:#fff;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box}
+  .box{max-width:420px}
+  h1{font-size:20px;margin:0 0 12px}
+  p{font-size:16px;line-height:1.6;margin:0 0 20px;color:#dbe4f0}
+  a.btn{display:inline-block;background:#ffc400;color:#1e1e1e;font-weight:700;font-size:18px;padding:16px 28px;border-radius:14px;text-decoration:none}
+  .spin{width:36px;height:36px;border:4px solid rgba(255,255,255,.3);border-top-color:#ffc400;border-radius:50%;margin:0 auto 20px;animation:r 1s linear infinite}
+  @keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="spin" id="spin"></div>
+  <h1>第21回 東京大田市人会</h1>
+  <p id="msg">出欠回答フォームを開いています…<br>しばらくお待ちください</p>
+  <a class="btn" id="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSe40qH9zA3McTEXpQQ95BJhgNCMESgOMluzvb7gxbfax1TdgQ/viewform" style="display:none">出欠回答フォームを開く</a>
+</div>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+  // 東京大田市人会 公式LINE：リッチメニュー「出欠のご回答はこちら」の中継ページ。
+  // LINEのユーザーIDを取り、Googleフォームの「LINE連携用」項目に埋め込んだURLへ移動する。
+  // 取れなかった場合も、ユーザーID無しのフォームへ案内する（GAS側では氏名で照合される）。
+  var LIFF_ID = '2010088280-T8UVyltM';
+  var FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSe40qH9zA3McTEXpQQ95BJhgNCMESgOMluzvb7gxbfax1TdgQ/viewform';
+  var ENTRY = '1166822250';
+  var moved = false;
+  function go(userId){
+    if (moved) return; moved = true;
+    var url = FORM_URL + (userId ? '?usp=pp_url&entry.' + ENTRY + '=' + encodeURIComponent(userId) : '');
+    document.getElementById('btn').href = url;
+    location.replace(url);
+  }
+  function showButton(){
+    document.getElementById('spin').style.display = 'none';
+    document.getElementById('msg').innerHTML = '自動で開かない場合は、下のボタンを押してください';
+    document.getElementById('btn').style.display = 'inline-block';
+  }
+  setTimeout(showButton, 6000);
+  liff.init({ liffId: LIFF_ID }).then(function(){
+    if (!liff.isLoggedIn()) { liff.login(); return; }
+    var ctx = liff.getContext();
+    if (ctx && ctx.userId) { go(ctx.userId); return; }
+    return liff.getProfile().then(function(p){ go(p.userId); });
+  }).catch(function(e){
+    console.error(e);
+    setTimeout(function(){ go(''); }, 1500);
+  });
+</script>
+</body>
+</html>
