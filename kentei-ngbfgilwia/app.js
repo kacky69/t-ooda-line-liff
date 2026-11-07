@@ -306,7 +306,7 @@
       html += '<button type="button" class="choice" data-c="' + c + '"><span class="choice__letter">' + LETTERS[c] +
         '</span><span class="choice__text">' + esc(q.choices[c]) + "</span></button>";
     }
-    html += "</div>" + '<p class="q-hint">選ぶと確認が出ます</p></section>';
+    html += "</div></section>";
     show(html);
 
     // 進捗バーを少し遅らせて伸ばす
