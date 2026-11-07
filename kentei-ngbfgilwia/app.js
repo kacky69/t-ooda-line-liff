@@ -13,6 +13,9 @@
   var LETTERS = ["A", "B", "C"];
   var KEY = "iwami_kentei_20261128";
   var RESET_VALUE = "ooda1128";
+  // テスト期間中は true：開くたびに最初からになる（運営が何回も試すため・2026-11-07 kacky 指示）
+  // ⚠️ 本番（11/28）の前に必ず false に戻す。false で「1回解いたら結果画面を出し続ける」動きになる
+  var TEST_MODE = true;
   var COOKIE_PATH = location.pathname.replace(/[^/]*$/, "") || "/";
 
   var app = document.getElementById("app");
@@ -79,6 +82,8 @@
     if (m && decodeURIComponent(m[1]) === RESET_VALUE) {
       wipe();
       history.replaceState(null, "", location.pathname);
+    } else if (TEST_MODE) {
+      wipe();
     }
   })();
 
@@ -270,6 +275,7 @@
     show(
       '<section class="screen start">' +
         '<div class="start__hero">' + MOUNTAIN_SVG +
+          (TEST_MODE ? '<div class="test-badge">テスト版：開くたびに最初からになります</div>' : "") +
           '<div class="start__badge">世界遺産石見銀山 東京マルシェ</div>' +
           '<h1 class="start__title"><small>石見銀山</small>世界遺産検定</h1>' +
           '<p class="start__lead">にチャレンジ！</p>' +

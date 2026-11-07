@@ -77,6 +77,10 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
   font-family: var(--mincho); font-weight: 900; font-size: 34px; line-height: 1.3; margin: 0 0 6px; letter-spacing: .04em;
 }
 .start__title small { display: block; font-size: 19px; font-weight: 700; color: var(--ink-2); letter-spacing: .1em; }
+.test-badge {
+  display: table; margin: 0 auto 10px; font-size: 12px; font-weight: 700; color: #fff; background: #6b5b3e;
+  border-radius: 99px; padding: 2px 12px;
+}
 .start__lead { font-family: var(--mincho); font-weight: 700; font-size: 22px; margin: 6px 0 0; color: var(--ai-2); }
 
 .info { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 18px 6px; margin: 20px 0; }
