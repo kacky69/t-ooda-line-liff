@@ -275,6 +275,9 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
 .staff__label { text-align: center; font-size: 12px; color: #b9c4d2; margin: 0 0 6px; letter-spacing: .1em; }
 .staff__done { text-align: center; font-size: 15px; font-weight: 700; color: #f6c9bd; margin: 0; }
 .result-foot { text-align: center; font-size: 12px; color: #9fb0c4; margin: 18px 0 0; }
+.retry { margin: 40px 0 8px; padding-top: 20px; border-top: 1px dashed #3b5170; }
+.retry__label { text-align: center; font-size: 12px; color: #9fb0c4; margin: 0 0 8px; letter-spacing: .08em; }
+.btn--retry { background: transparent; color: #e6ecf3; border: 2px solid #6f86a3; font-size: 16px; min-height: 50px; }
 
 /* ---------- 音ボタン・紙吹雪 ---------- */
 .sound-toggle {

@@ -13,9 +13,9 @@
   var LETTERS = ["A", "B", "C"];
   var KEY = "iwami_kentei_20261128";
   var RESET_VALUE = "ooda1128";
-  // テスト期間中は true：開くたびに最初からになる（運営が何回も試すため・2026-11-07 kacky 指示）
-  // ⚠️ 本番（11/28）の前に必ず false に戻す。false で「1回解いたら結果画面を出し続ける」動きになる
-  var TEST_MODE = true;
+  // 確認期間中は true：結果画面のいちばん下に「もう1回解く」を出す（運営が何回も試すため・2026-11-09 kacky 指示）
+  // ⚠️ 本番（11/28）の直前に必ず false にする。false で「もう1回解く」が消え、1回解いたら結果画面のまま
+  var RETRY_BUTTON = true;
   var COOKIE_PATH = location.pathname.replace(/[^/]*$/, "") || "/";
 
   var app = document.getElementById("app");
@@ -82,8 +82,6 @@
     if (m && decodeURIComponent(m[1]) === RESET_VALUE) {
       wipe();
       history.replaceState(null, "", location.pathname);
-    } else if (TEST_MODE) {
-      wipe();
     }
   })();
 
@@ -275,7 +273,7 @@
     show(
       '<section class="screen start">' +
         '<div class="start__hero">' + MOUNTAIN_SVG +
-          (TEST_MODE ? '<div class="test-badge">テスト版：開くたびに最初からになります</div>' : "") +
+          (RETRY_BUTTON ? '<div class="test-badge">確認用：結果画面のいちばん下から、もう1回解けます</div>' : "") +
           '<div class="start__badge">世界遺産石見銀山 東京マルシェ</div>' +
           '<h1 class="start__title"><small>石見銀山</small>世界遺産検定</h1>' +
           '<p class="start__lead">にチャレンジ！</p>' +
@@ -492,11 +490,16 @@
           '<div class="marks"><p class="marks__title">答え合わせ</p>' + marks + "</div>" +
           '<div class="staff" id="staff">' + staffInner() + "</div>" +
           '<p class="result-foot">石見銀山世界遺産センター 制作の問題より</p>' +
+          (RETRY_BUTTON
+            ? '<div class="retry"><p class="retry__label">― 確認用（本番前に消えます）―</p>' +
+              '<button type="button" class="btn btn--retry" id="retry">もう1回解く</button></div>'
+            : "") +
         "</div>" +
       "</section>",
       true
     );
     bindStaff();
+    bindRetry();
 
     if (!animate) return;
 
@@ -558,6 +561,29 @@
         no: "やめる",
         yesClass: "btn--shu",
         onYes: markScooped
+      });
+    });
+  }
+
+  // 確認期間だけの「もう1回解く」。点数と「済み」を消して最初の画面へ
+  function bindRetry() {
+    var btn = document.getElementById("retry");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      openSheet({
+        html:
+          '<p class="sheet__title" id="sheet-title">もう1回、最初から解きますか？</p>' +
+          '<p class="sheet__note">今の点数と「お米すくい取り 済み」は消えます。</p>',
+        yes: "最初から解く",
+        no: "やめる",
+        onYes: function () {
+          var sound = state.sound;
+          wipe();
+          state = blank();
+          state.sound = sound;
+          save();
+          renderStart();
+        }
       });
     });
   }
