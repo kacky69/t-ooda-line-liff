@@ -511,9 +511,10 @@
 
     Sound.drumroll(3.6);
     var seq = [
-      [1300, "1", function () { Sound.count(1); }],
+      // 3、2、1、ドン！（音は1拍ごとに高くしていく）
+      [1300, "3", function () { Sound.count(1); }],
       [2100, "2", function () { Sound.count(2); }],
-      [2900, "3", function () { Sound.count(3); }],
+      [2900, "1", function () { Sound.count(3); }],
       [3700, '<span class="don">ドン！</span>', function () { Sound.don(); vibrate([0, 90, 40, 140]); }]
     ];
     seq.forEach(function (st) {
