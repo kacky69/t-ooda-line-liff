@@ -79,6 +79,10 @@
     .sheet__warn { font-size: 18px; font-weight: 700; color: var(--shu); margin: 0 0 20px; }
     .sheet__actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
     .sheet__actions .btn { width: 100%; }
+    .thanks { text-align: center; font-size: 18px; font-weight: 700; color: var(--ink-2); margin: 0 0 14px; }
+    .item__time { font-size: 34px; font-weight: 800; line-height: 1.2; }
+    .test { background: #fff2cc; border: 2px dashed #c9a227; border-radius: 14px; padding: 12px; margin: 22px 0 0; text-align: center; font-size: 16px; color: #6b5310; }
+    .test .btn { margin-top: 10px; min-height: 46px; font-size: 16px; }
     .foot { text-align: center; font-size: 14px; color: var(--ink-2); margin-top: 26px; }
   </style>
 </head>
@@ -106,83 +110,93 @@
   </div>
 
   <script>
-    // 東京大田市人会 公式LINE：世界遺産石見銀山 東京マルシェ（2026-11-28）の来場者プレゼントの受け取り記録。
-    // メニュー「来場者プレゼント」を押すと、公式LINEが本人用の専用リンク（このページ?t=鍵）を返信する。LIFF は使わない（LINE の認証画面を出さない）。
-    // 本人の確認は、鍵 t を GAS（doGet）へ送り、GAS が署名を確かめて行う。記録先は名簿「登録状況」の M・N 列
-    var KEY = new URLSearchParams(location.search).get('t') || '';
+    // 東京大田市人会 公式LINE：世界遺産石見銀山 東京マルシェ（2026-11-28）の来場者プレゼント。
+    // 2026-11-26 クッキー方式：メニュー「来場者プレゼント」から直接このページが開く。
+    // 受け取り済みかどうかはこのスマホの中（localStorage＋クッキー）だけに保存する。名前は出さない。
+    // 押されたら GAS（doGet ?action=count）に知らせて、何人に渡したかだけを数える（名簿「来場者プレゼント記録」タブ）。
+    // LINE アプリの中で開いたときだけボタンを出す（Safari などで開き直して、もう一度押せないように）。
+    // 本番は 11/28（日本時間）だけ。それより前は「テスト中」で、テストの記録を消すボタンが付く。11/29 以降は終了と出す。
     var API = 'https://script.google.com/macros/s/AKfycbzXdRRBMFe4aW-FXYUZnYX3LI_z0UfZW44QfIQ8_dWuRdRwRF2m-CBqPIa3cFEEqKCl/exec';
-    var ORDER = ['furikake', 'rice'];
+    var EVENT_DAY = '2026-11-28';
+    var ITEMS = [{ key: 'furikake', label: 'ふりかけ' }, { key: 'rice', label: 'お米すくい取り' }];
     var view = document.getElementById('view');
     var sheet = document.getElementById('sheet');
-    var state = null, pending = null, sending = false;
+    var pending = null;
 
-    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function jstDay() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
+    function jstTime() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(11, 16); }
+    var day = jstDay();
+    var MODE = day === EVENT_DAY ? 'real' : (day < EVENT_DAY ? 'test' : 'over');
+    var KEY = MODE === 'real' ? 'ooda_present_20261128' : 'ooda_present_test';
 
-    function showMessage(main, sub, retry) {
-      view.innerHTML = '<div class="msg"><p class="msg__main">' + main + '</p>' + (sub ? '<p class="msg__sub">' + sub + '</p>' : '') +
-        (retry ? '<button type="button" class="btn btn--primary" onclick="location.reload()">もう一度読み込む</button>' : '') + '</div>';
+    // 保存：localStorage とクッキーの両方に書き、読むときはどちらかに残っていればよい
+    function cookieGet(k) {
+      var m = document.cookie.match(new RegExp('(?:^|; )' + k + '=([^;]*)'));
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+    function cookieSet(k, v, days) {
+      document.cookie = k + '=' + encodeURIComponent(v) + '; max-age=' + (days * 86400) + '; path=/; SameSite=Lax; Secure';
+    }
+    function load(k) {
+      var v = null;
+      try { v = localStorage.getItem(k); } catch (e) {}
+      if (!v) v = cookieGet(k);
+      return v;
+    }
+    function save(k, v) {
+      try { localStorage.setItem(k, v); } catch (e) {}
+      cookieSet(k, v, 60);
+    }
+    function wipe(k) {
+      try { localStorage.removeItem(k); } catch (e) {}
+      document.cookie = k + '=; max-age=0; path=/; SameSite=Lax; Secure';
+    }
+    function readState() { try { return JSON.parse(load(KEY) || '{}') || {}; } catch (e) { return {}; } }
+    function device() {
+      var d = load('ooda_present_dev');
+      if (!d) { d = Math.random().toString(36).slice(2, 10) + Date.now().toString(36); save('ooda_present_dev', d); }
+      return d;
     }
 
-    function call(params) {
-      var q = ['t=' + encodeURIComponent(KEY)];
-      Object.keys(params).forEach(function (k) { q.push(k + '=' + encodeURIComponent(params[k])); });
-      return fetch(API + '?' + q.join('&'), { method: 'GET', redirect: 'follow', cache: 'no-store' }).then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      });
-    }
+    function isLineApp() { return /\bLine\//i.test(navigator.userAgent || ''); }
 
-    // 11/28 当日でないときは、ボタンを出さずに案内だけ出す（GAS も当日以外の「受け取った」は記録しない）
-    function showNotToday(name) {
-      view.innerHTML = (name ? '<p class="name">' + esc(name) + ' 様</p>' : '') +
-        '<div class="msg"><p class="msg__main"><span>11/28（土）当日、</span><span>会場でご利用いただけます</span></p>' +
-        '<p class="msg__sub">世界遺産石見銀山 東京マルシェの受付で、このページを開いてください</p></div>';
-    }
-
-    function handle(res) {
-      if (res.state === 'ok' && res.today === false) { showNotToday(res.name); return; }
-      if (res.state === 'ok') { state = res; render(); return; }
-      if (res.state === 'notToday') { showNotToday(res.name); return; }
-      if (res.state === 'member') {
-        showMessage('会員の方は、<br>名札を受付でお見せください', res.name ? esc(res.name) + ' 様' : '');
-      } else if (res.state === 'unregistered') {
-        showMessage('LINEの登録を<br>最後まで済ませてください', 'トーク画面の質問（会員かどうか・お名前）にお答えいただくと、このページが使えます');
-      } else if (res.state === 'notTarget') {
-        showMessage('このページは、<br>ただいまご利用いただけません');
-      } else if (res.state === 'invalid') {
-        showMessage('ご本人の確認が<br>できませんでした', 'いったん閉じて、公式LINEのメニュー「来場者プレゼント」を押し、届いたリンクから開き直してください', false);
-      } else if (res.state === 'busy') {
-        toast('混み合っています。もう一度押してください');
-      } else {
-        showMessage('うまく読み込めませんでした', 'いったん閉じて、開き直してください', true);
-      }
+    function showMessage(main, sub) {
+      view.innerHTML = '<div class="msg"><p class="msg__main">' + main + '</p>' + (sub ? '<p class="msg__sub">' + sub + '</p>' : '') + '</div>';
     }
 
     function render() {
-      var html = '<p class="name">' + esc(state.name || 'お客') + ' 様</p>' +
+      var st = readState();
+      var html = '<p class="thanks">LINE友だち登録ありがとうございます</p>' +
         '<div class="notice"><span>受付のスタッフの前で</span><span>ボタンを押してください</span></div><div class="items">';
-      ORDER.forEach(function (key) {
-        var it = state.items[key];
-        if (!it) return;
-        if (it.at) {
-          html += '<button type="button" class="item is-done" disabled><span class="item__label">' + esc(it.label) + '</span>' +
-            '<span class="item__act">✅ 受け取り済み ' + esc(it.at) + '</span></button>';
+      ITEMS.forEach(function (it) {
+        if (st[it.key]) {
+          html += '<button type="button" class="item is-done" disabled><span class="item__label">' + it.label + '</span>' +
+            '<span class="item__act">✅ 受け取り済み</span><span class="item__time">' + st[it.key] + '</span></button>';
         } else {
-          html += '<button type="button" class="item" data-item="' + key + '"><span class="item__label">' + esc(it.label) + '</span>' +
+          html += '<button type="button" class="item" data-item="' + it.key + '"><span class="item__label">' + it.label + '</span>' +
             '<span class="item__act">受け取った</span></button>';
         }
       });
-      html += '</div><p class="toast" id="toast"></p>';
+      html += '</div>';
+      if (MODE === 'test') {
+        html += '<div class="test">テスト中です（本番は 11/28 当日）<br>テストで押した記録は、当日の本番には残りません' +
+          '<br><button type="button" class="btn btn--ghost" id="reset">テストの記録を消す</button></div>';
+      }
       view.innerHTML = html;
+      var r = document.getElementById('reset');
+      if (r) r.addEventListener('click', function () { wipe(KEY); render(); });
     }
 
-    function toast(s) { var t = document.getElementById('toast'); if (t) t.textContent = s; }
+    function count(key) {
+      var q = 'action=count&item=' + key + '&mode=' + MODE + '&dev=' + encodeURIComponent(device());
+      try { fetch(API + '?' + q, { method: 'GET', mode: 'no-cors', cache: 'no-store', keepalive: true }); } catch (e) {}
+    }
 
     view.addEventListener('click', function (e) {
       var b = e.target.closest('[data-item]');
-      if (!b || b.disabled || sending) return;
+      if (!b || b.disabled) return;
       pending = b.getAttribute('data-item');
-      document.getElementById('sheet-item').textContent = state.items[pending].label;
+      ITEMS.forEach(function (it) { if (it.key === pending) document.getElementById('sheet-item').textContent = it.label; });
       sheet.hidden = false;
     });
     sheet.addEventListener('click', function (e) {
@@ -191,32 +205,22 @@
     document.getElementById('sheet-yes').addEventListener('click', function () {
       var key = pending;
       sheet.hidden = true; pending = null;
-      if (!key || sending) return;
-      sending = true;
-      var b = view.querySelector('[data-item="' + key + '"]');
-      if (b) { b.disabled = true; b.classList.add('is-busy'); b.querySelector('.item__act').textContent = '記録しています…'; }
-      call({ action: 'receive', item: key }).then(function (res) {
-        sending = false;
-        if (res.state === 'busy') { render(); toast('混み合っています。もう一度押してください'); return; }
-        handle(res);
-      }).catch(function () {
-        sending = false;
-        render();
-        toast('通信できませんでした。もう一度押してください');
-      });
+      if (!key) return;
+      var st = readState();
+      if (st[key]) { render(); return; }
+      st[key] = jstTime();
+      save(KEY, JSON.stringify(st));
+      render();
+      count(key);
     });
 
-    function start() {
-      if (!KEY) {
-        showMessage('<span>LINEのメニューの</span><span>「来場者プレゼント」から</span><span>開いてください</span>', '東京大田市人会の公式LINEでメニューの「来場者プレゼント」を押すと、このページのリンクが届きます');
-        return;
-      }
-      call({ action: 'status' }).then(handle).catch(function () {
-        showMessage('通信できませんでした', '電波の良いところで、もう一度お試しください', true);
-      });
+    if (!isLineApp()) {
+      showMessage('<span>LINEアプリの中で</span><span>開いてください</span>', '東京大田市人会の公式LINEで、メニューの「来場者プレゼント」を押すと開きます');
+    } else if (MODE === 'over') {
+      showMessage('<span>来場者プレゼントは</span><span>終了しました</span>', 'ご来場ありがとうございました');
+    } else {
+      render();
     }
-
-    start();
   </script>
 </body>
 </html>
