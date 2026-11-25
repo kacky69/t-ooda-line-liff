@@ -1,9 +1,10 @@
 /* 石見銀山 世界遺産検定 — 画面の流れ
  *  スタート → 第1〜10問（選択 → 確認 → 次へ） → 採点中（約10秒） → 結果
  *
- *  ・回答と受付の状態は localStorage と Cookie の両方に保存する。
- *    どちらか片方が消えても、もう片方から復元する（「すくい取り済み」はどちらかに残っていれば済み扱い）。
+ *  ・回答は localStorage と Cookie の両方に保存する。
+ *    どちらか片方が消えても、もう片方から復元する。
  *  ・解き終わった後に開き直すと、結果画面がそのまま出る（やり直しはできない）。
+ *    ただし RETRY_BUTTON が true の間は、結果画面のいちばん下に「もう1回解く」が出る（確認用）。
  *  ・テスト用リセット：URL の末尾に ?reset=ooda1128 を付けて開く。
  */
 (function () {
@@ -13,7 +14,7 @@
   var LETTERS = ["A", "B", "C"];
   var KEY = "iwami_kentei_20261128";
   var RESET_VALUE = "ooda1128";
-  // 確認期間中は true：結果画面のいちばん下に「もう1回解く」を出す（運営が何回も試すため・2026-11-09 kacky 指示）
+  // 確認期間中は true：結果画面のいちばん下に「もう1回解く」を出す（運営が何回も試すため・2026-11-26 kacky 指示でこれだけ残す）
   // ⚠️ 本番（11/28）の直前に必ず false にする。false で「もう1回解く」が消え、1回解いたら結果画面のまま
   var RETRY_BUTTON = true;
   var COOKIE_PATH = location.pathname.replace(/[^/]*$/, "") || "/";
@@ -25,7 +26,7 @@
    * 保存（localStorage ＋ Cookie）
    * ======================================================= */
   function blank() {
-    return { v: 1, answers: [], done: false, finishedAt: null, scooped: false, scoopedAt: null, sound: true };
+    return { v: 1, answers: [], done: false, finishedAt: null, sound: true };
   }
 
   function readLocal() {
@@ -51,14 +52,9 @@
     b = valid(b) ? b : null;
     if (!a && !b) return blank();
     if (!a || !b) return Object.assign(blank(), a || b);
-    // 両方ある → 先に進んでいる方を採用し、「済み」はどちらかにあれば済み
+    // 両方ある → 先に進んでいる方を採用する
     var base = (b.done && !a.done) || (b.answers.length > a.answers.length) ? b : a;
-    var s = Object.assign(blank(), base);
-    if (a.scooped || b.scooped) {
-      s.scooped = true;
-      s.scoopedAt = a.scoopedAt || b.scoopedAt || s.scoopedAt;
-    }
-    return s;
+    return Object.assign(blank(), base);
   }
 
   function save() {
@@ -273,7 +269,6 @@
     show(
       '<section class="screen start">' +
         '<div class="start__hero">' + MOUNTAIN_SVG +
-          (RETRY_BUTTON ? '<div class="test-badge">確認用：結果画面のいちばん下から、もう1回解けます</div>' : "") +
           '<div class="start__badge">世界遺産石見銀山 東京マルシェ</div>' +
           '<h1 class="start__title"><small>石見銀山</small>世界遺産検定</h1>' +
           '<p class="start__lead">にチャレンジ！</p>' +
@@ -281,7 +276,6 @@
         '<div class="info">' +
           '<div class="info__row"><div class="info__icon">📝</div><div class="info__text"><b>全10問・3択</b><br>A・B・C から1つ選んでください</div></div>' +
           '<div class="info__row"><div class="info__icon">⏱</div><div class="info__text"><b>3分ほどで終わります</b><br>チャレンジは1人1回です</div></div>' +
-          '<div class="info__row"><div class="info__icon">🎁</div><div class="info__text"><b>受けた方全員に</b><br>参加賞と「お米のすくい取り」！</div></div>' +
         "</div>" +
         '<div class="start__foot">' +
           '<button type="button" class="btn btn--primary" id="go">はじめる</button>' +
@@ -437,6 +431,29 @@
     later(function () { renderResult(true); }, TOTAL + 1800); // 合計 約10秒
   }
 
+  // 確認期間だけの「もう1回解く」。点数を消して最初の画面へ
+  function bindRetry() {
+    var btn = document.getElementById("retry");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      openSheet({
+        html:
+          '<p class="sheet__title" id="sheet-title">もう1回、最初から解きますか？</p>' +
+          '<p class="sheet__note">今の点数は消えます。</p>',
+        yes: "最初から解く",
+        no: "やめる",
+        onYes: function () {
+          var sound = state.sound;
+          wipe();
+          state = blank();
+          state.sound = sound;
+          save();
+          renderStart();
+        }
+      });
+    });
+  }
+
   /* =========================================================
    * 4. 結果
    * ======================================================= */
@@ -445,11 +462,6 @@
     if (s >= 70) return "おみごと！おめでとう！";
     if (s >= 40) return "おめでとう！";
     return "チャレンジおめでとう！";
-  }
-
-  function stampHtml(isNew) {
-    return '<div class="stamp' + (isNew ? " is-new" : "") + '"><div class="stamp__in">お米すくい取り<b>済</b><small>' +
-      esc(fmtTime(state.scoopedAt)) + "</small></div></div>";
   }
 
   function renderResult(animate) {
@@ -478,17 +490,8 @@
           '<div id="r-badge">' + (animate ? "" : badge) + "</div>" +
         "</div>" +
         '<div class="result-body" id="r-body"' + (animate ? " hidden" : "") + ">" +
-          '<div class="ticket' + (state.scooped ? " is-used" : "") + '" id="ticket">' +
-            '<p class="ticket__show">この画面を受付で<br>そのままお見せください<span>参加賞と、お米のすくい取りが受けられます</span></p>' +
-            '<div class="ticket__perks">' +
-              '<div class="perk"><div class="perk__icon">🎁</div><div class="perk__text"><b>参加賞</b>受付でお渡しします</div></div>' +
-              '<div class="perk perk--rice"><div class="perk__icon">🍚</div><div class="perk__text"><b>お米のすくい取り</b>三瓶山のふもと「ファーム浮布」さんの「うきぬのの米」を、手ですくい取れます！</div></div>' +
-            "</div>" +
-            '<div class="ticket__meta"><span>石見銀山 世界遺産検定</span><span>' + s + "点・" + esc(fmtTime(state.finishedAt)) + "</span></div>" +
-            (state.scooped ? stampHtml(false) : "") +
-          "</div>" +
+          '<p class="result-meta">石見銀山 世界遺産検定　' + s + '点・' + esc(fmtTime(state.finishedAt)) + '</p>' +
           '<div class="marks"><p class="marks__title">答え合わせ</p>' + marks + "</div>" +
-          '<div class="staff" id="staff">' + staffInner() + "</div>" +
           '<p class="result-foot">石見銀山世界遺産センター 制作の問題より</p>' +
           (RETRY_BUTTON
             ? '<div class="retry"><p class="retry__label">― 確認用（本番前に消えます）―</p>' +
@@ -498,7 +501,6 @@
       "</section>",
       true
     );
-    bindStaff();
     bindRetry();
 
     if (!animate) return;
@@ -540,66 +542,6 @@
     }
 
     later(function () { body.hidden = false; }, perfect ? 6200 : 5400);
-  }
-
-  function staffInner() {
-    if (state.scooped) {
-      return '<p class="staff__done">お米すくい取り 済み（' + esc(fmtTime(state.scoopedAt)) + "）</p>";
-    }
-    return '<p class="staff__label">― 受付スタッフ用 ―</p>' +
-      '<button type="button" class="btn btn--staff" id="scoop">お米すくい取り 済みにする</button>';
-  }
-
-  function bindStaff() {
-    var btn = document.getElementById("scoop");
-    if (!btn) return;
-    btn.addEventListener("click", function () {
-      openSheet({
-        html:
-          '<p class="sheet__title" id="sheet-title">受付スタッフの方が押してください</p>' +
-          '<p class="sheet__note">お米のすくい取りが終わったら押してください。<br>押すと元に戻せません。</p>',
-        yes: "済みにする",
-        no: "やめる",
-        yesClass: "btn--shu",
-        onYes: markScooped
-      });
-    });
-  }
-
-  // 確認期間だけの「もう1回解く」。点数と「済み」を消して最初の画面へ
-  function bindRetry() {
-    var btn = document.getElementById("retry");
-    if (!btn) return;
-    btn.addEventListener("click", function () {
-      openSheet({
-        html:
-          '<p class="sheet__title" id="sheet-title">もう1回、最初から解きますか？</p>' +
-          '<p class="sheet__note">今の点数と「お米すくい取り 済み」は消えます。</p>',
-        yes: "最初から解く",
-        no: "やめる",
-        onYes: function () {
-          var sound = state.sound;
-          wipe();
-          state = blank();
-          state.sound = sound;
-          save();
-          renderStart();
-        }
-      });
-    });
-  }
-
-  function markScooped() {
-    if (state.scooped) return;
-    state.scooped = true;
-    state.scoopedAt = Date.now();
-    save();
-    var ticket = document.getElementById("ticket");
-    ticket.classList.add("is-used");
-    ticket.insertAdjacentHTML("beforeend", stampHtml(true));
-    document.getElementById("staff").innerHTML = staffInner();
-    Sound.don();
-    vibrate(80);
   }
 
   /* =========================================================

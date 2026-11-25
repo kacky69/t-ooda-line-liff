@@ -297,3 +297,5 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
 @media (prefers-reduced-motion: reduce) {
   .mine__pick, .bibibi, .title-badge { animation: none; }
 }
+
+.result-meta { margin: 0 0 14px; text-align: center; font-size: 12px; opacity: .7; }
