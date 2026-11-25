@@ -36,8 +36,8 @@
     .hd__title { font-family: var(--mincho); font-weight: 900; font-size: 26px; margin: 2px 0 0; letter-spacing: .08em; color: var(--ai); }
     .name { text-align: center; font-size: 24px; font-weight: 700; margin: 0 0 16px; word-break: break-all; }
     .notice {
-      background: var(--shu); color: #fff; border-radius: 16px; padding: 18px 14px; margin: 0 0 22px;
-      text-align: center; font-size: 30px; font-weight: 800; line-height: 1.4; letter-spacing: .02em;
+      background: var(--shu); color: #fff; border-radius: 16px; padding: 18px 8px; margin: 0 0 22px;
+      text-align: center; font-size: clamp(22px, 7.6vw, 32px); font-weight: 800; line-height: 1.4; letter-spacing: 0;
       box-shadow: 0 4px 0 #8c2614;
     }
     .items { display: grid; gap: 16px; }
@@ -48,7 +48,8 @@
       transition: transform .08s ease, box-shadow .2s ease;
     }
     .item:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 #0e1620; }
-    .item__label { font-size: 26px; font-weight: 800; letter-spacing: .04em; }
+    .notice span, .msg__main span { display: inline-block; }
+    .item__label { font-size: 24px; font-weight: 800; letter-spacing: .04em; }
     .item__act { font-size: 22px; font-weight: 700; background: #fff; color: var(--ai); border-radius: 999px; padding: 4px 22px; }
     .item.is-done { background: var(--ok-bg); color: var(--ok); box-shadow: none; border: 3px solid var(--ok); cursor: default; }
     .item.is-done .item__act { background: transparent; color: var(--ok); font-size: 24px; padding: 0; }
@@ -159,7 +160,7 @@
 
     function render() {
       var html = '<p class="name">' + esc(state.name || 'お客') + ' 様</p>' +
-        '<div class="notice">受付のスタッフの前で<br>ボタンを押してください</div><div class="items">';
+        '<div class="notice"><span>受付のスタッフの前で</span><span>ボタンを押してください</span></div><div class="items">';
       ORDER.forEach(function (key) {
         var it = state.items[key];
         if (!it) return;
@@ -207,7 +208,7 @@
 
     function start() {
       if (!liff.isInClient()) {
-        showMessage('LINEアプリで開いてください', '東京大田市人会の公式LINEのメニュー「来店者プレゼント」から開けます');
+        showMessage('<span>LINEアプリで</span><span>開いてください</span>', '東京大田市人会の公式LINEのメニュー「来店者プレゼント」から開けます');
         return;
       }
       if (!liff.isLoggedIn()) { liff.login(); return; }
@@ -218,7 +219,7 @@
 
     liff.init({ liffId: LIFF_ID }).then(start).catch(function (e) {
       console.error(e);
-      showMessage('LINEアプリで開いてください', '東京大田市人会の公式LINEのメニュー「来店者プレゼント」から開けます');
+      showMessage('<span>LINEアプリで</span><span>開いてください</span>', '東京大田市人会の公式LINEのメニュー「来店者プレゼント」から開けます');
     });
   </script>
 </body>
