@@ -464,6 +464,16 @@
     return "チャレンジおめでとう！";
   }
 
+  // 点数ごとの称号（2026-11-26 kacky 確定）。cls は色（style.css の .tb--◯◯）
+  function titleFor(s) {
+    if (s >= 100) return { cls: "gold",   head: "満点合格の称号", name: "石見銀山 銀山奉行", line: "" };
+    if (s >= 90)  return { cls: "shine",  head: "あなたの称号", name: "大森代官", line: "あと一歩で奉行じゃ、惜しい！" };
+    if (s >= 70)  return { cls: "silver", head: "あなたの称号", name: "腕ききの山師（やまし）", line: "安原伝兵衛も一目置く目利き" };
+    if (s >= 50)  return { cls: "iron",   head: "あなたの称号", name: "一人前の銀掘（かねほり）", line: "間歩に入ってよし！" };
+    if (s >= 10)  return { cls: "bronze", head: "あなたの称号", name: "見習い掘子（ほりこ）", line: "掘った石を運ぶところから修業じゃ" };
+    return { cls: "gray", head: "あなたの称号", name: "間歩（まぶ）で迷子の野良犬 🐕", line: "ワン！ 出直してくるワン" };
+  }
+
   function renderResult(animate) {
     var s = score();
     var perfect = s === 100;
@@ -479,7 +489,9 @@
     }
 
     var scoreHtml = '<span class="score"><span class="score__num">' + s + '</span><span class="score__unit">点</span></span>';
-    var badge = perfect ? '<div class="title-badge"><small>満点合格の称号</small>石見銀山 銀山奉行</div>' : "";
+    var t = titleFor(s);
+    var badge = '<div class="title-badge tb--' + t.cls + '"><small>' + esc(t.head) + "</small>" + esc(t.name) +
+      (t.line ? '<span class="title-badge__line">' + esc(t.line) + "</span>" : "") + "</div>";
 
     show(
       '<section class="screen result' + (perfect ? " is-perfect" : "") + '">' +
@@ -535,13 +547,11 @@
       confetti(perfect);
     }, 4400);
 
-    if (perfect) {
-      later(function () {
-        badgeBox.innerHTML = '<span class="pop" style="display:inline-block">' + badge + "</span>";
-      }, 5300);
-    }
+    later(function () {
+      badgeBox.innerHTML = '<span class="pop" style="display:inline-block">' + badge + "</span>";
+    }, 5300);
 
-    later(function () { body.hidden = false; }, perfect ? 6200 : 5400);
+    later(function () { body.hidden = false; }, 6200);
   }
 
   /* =========================================================

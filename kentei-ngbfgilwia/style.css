@@ -217,6 +217,14 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
   animation: shine 2.4s ease-in-out infinite;
 }
 .title-badge small { display: block; font-size: 12px; letter-spacing: .2em; font-weight: 700; }
+.title-badge__line { display: block; margin-top: 4px; font-size: 14px; letter-spacing: .04em; font-weight: 700; }
+/* 称号の色（金＝100点はもとの .title-badge のまま） */
+.tb--shine  { color: #1f2630; background: var(--silver-grad); box-shadow: 0 0 0 3px #39414c inset, 0 0 26px rgba(230,236,245,.8); animation: shineSilver 2.4s ease-in-out infinite; }
+.tb--silver { color: #1f2630; background: var(--silver-grad); box-shadow: 0 0 0 3px #39414c inset; animation: none; }
+.tb--iron   { color: #f0f2f4; background: linear-gradient(180deg, #8d949c 0%, #5d646c 50%, #444a51 100%); box-shadow: 0 0 0 3px #2b2f34 inset; animation: none; }
+.tb--bronze { color: #2e1607; background: linear-gradient(180deg, #f3c39a 0%, #c9814b 50%, #8f5124 100%); box-shadow: 0 0 0 3px #4a250c inset; animation: none; }
+.tb--gray   { color: #f2f2f2; background: #6b6f75; box-shadow: 0 0 0 3px #45484d inset; animation: none; }
+@keyframes shineSilver { 0%,100% { box-shadow: 0 0 0 3px #39414c inset, 0 0 12px rgba(230,236,245,.45); } 50% { box-shadow: 0 0 0 3px #39414c inset, 0 0 30px rgba(230,236,245,.95); } }
 @keyframes shine { 0%,100% { box-shadow: 0 0 0 3px #3a2a00 inset, 0 0 14px rgba(255,214,90,.5); } 50% { box-shadow: 0 0 0 3px #3a2a00 inset, 0 0 34px rgba(255,214,90,.95); } }
 
 .result-body { animation: fadeUp .5s ease both; }
@@ -295,7 +303,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
   .score__num { font-size: 104px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mine__pick, .bibibi, .title-badge { animation: none; }
+  .mine__pick, .bibibi, .title-badge, .tb--shine { animation: none; }
 }
 
 .result-meta { margin: 0 0 14px; text-align: center; font-size: 12px; opacity: .7; }
