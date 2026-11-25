@@ -105,12 +105,11 @@
     </div>
   </div>
 
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
     // 東京大田市人会 公式LINE：世界遺産石見銀山 東京マルシェ（2026-11-28）の来場者プレゼントの受け取り記録。
-    // メニュー「来場者プレゼント」→ https://liff.line.me/2010088280-T8UVyltM/present-axccpmatrg/ で開く。
-    // 本人の確認は LIFF のトークンを GAS（doGet）へ送り、GAS が LINE に問い合わせて行う。記録先は名簿「登録状況」の M・N 列
-    var LIFF_ID = '2010088280-T8UVyltM';
+    // メニュー「来場者プレゼント」を押すと、公式LINEが本人用の専用リンク（このページ?t=鍵）を返信する。LIFF は使わない（LINE の認証画面を出さない）。
+    // 本人の確認は、鍵 t を GAS（doGet）へ送り、GAS が署名を確かめて行う。記録先は名簿「登録状況」の M・N 列
+    var KEY = new URLSearchParams(location.search).get('t') || '';
     var API = 'https://script.google.com/macros/s/AKfycbzXdRRBMFe4aW-FXYUZnYX3LI_z0UfZW44QfIQ8_dWuRdRwRF2m-CBqPIa3cFEEqKCl/exec';
     var ORDER = ['furikake', 'rice'];
     var view = document.getElementById('view');
@@ -124,17 +123,9 @@
         (retry ? '<button type="button" class="btn btn--primary" onclick="location.reload()">もう一度読み込む</button>' : '') + '</div>';
     }
 
-    function tokens() {
-      var p = {};
-      try { var id = liff.getIDToken(); if (id) p.idToken = id; } catch (e) {}
-      try { var at = liff.getAccessToken(); if (at) p.accessToken = at; } catch (e) {}
-      return p;
-    }
-
     function call(params) {
-      var t = tokens(), q = [];
+      var q = ['t=' + encodeURIComponent(KEY)];
       Object.keys(params).forEach(function (k) { q.push(k + '=' + encodeURIComponent(params[k])); });
-      Object.keys(t).forEach(function (k) { q.push(k + '=' + encodeURIComponent(t[k])); });
       return fetch(API + '?' + q.join('&'), { method: 'GET', redirect: 'follow', cache: 'no-store' }).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
@@ -159,7 +150,7 @@
       } else if (res.state === 'notTarget') {
         showMessage('このページは、<br>ただいまご利用いただけません');
       } else if (res.state === 'invalid') {
-        showMessage('ご本人の確認が<br>できませんでした', 'いったん閉じて、LINEのメニュー「来場者プレゼント」から開き直してください', false);
+        showMessage('ご本人の確認が<br>できませんでした', 'いったん閉じて、公式LINEのメニュー「来場者プレゼント」を押し、届いたリンクから開き直してください', false);
       } else if (res.state === 'busy') {
         toast('混み合っています。もう一度押してください');
       } else {
@@ -216,20 +207,16 @@
     });
 
     function start() {
-      if (!liff.isInClient()) {
-        showMessage('<span>LINEアプリで</span><span>開いてください</span>', '東京大田市人会の公式LINEのメニュー「来場者プレゼント」から開けます');
+      if (!KEY) {
+        showMessage('<span>LINEのメニューの</span><span>「来場者プレゼント」から</span><span>開いてください</span>', '東京大田市人会の公式LINEでメニューの「来場者プレゼント」を押すと、このページのリンクが届きます');
         return;
       }
-      if (!liff.isLoggedIn()) { liff.login(); return; }
       call({ action: 'status' }).then(handle).catch(function () {
         showMessage('通信できませんでした', '電波の良いところで、もう一度お試しください', true);
       });
     }
 
-    liff.init({ liffId: LIFF_ID }).then(start).catch(function (e) {
-      console.error(e);
-      showMessage('<span>LINEアプリで</span><span>開いてください</span>', '東京大田市人会の公式LINEのメニュー「来場者プレゼント」から開けます');
-    });
+    start();
   </script>
 </body>
 </html>
