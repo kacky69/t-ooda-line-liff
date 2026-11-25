@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+  <meta name="googlebot" content="noindex, nofollow">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#1d2a3a">
+  <title>来店者プレゼント</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@700;900&display=swap">
+  <style>
+    :root {
+      --paper: #f5efe3; --card: #fffdf8; --ink: #1f1c18; --ink-2: #5d564b; --line: #d9cdb5;
+      --ai: #1d2a3a; --shu: #c23b22; --ok: #2f7d4f; --ok-bg: #e6f2ea;
+      --mincho: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+      --gothic: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Roboto, sans-serif;
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body {
+      background: var(--paper); color: var(--ink); font-family: var(--gothic);
+      font-size: 18px; line-height: 1.6; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    }
+    button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+    .app {
+      max-width: 480px; margin: 0 auto; min-height: 100vh; min-height: 100dvh;
+      padding: calc(16px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
+    }
+    .hd { text-align: center; padding: 8px 0 14px; border-bottom: 2px solid var(--line); margin-bottom: 18px; }
+    .hd__sub { font-family: var(--mincho); font-weight: 700; font-size: 17px; color: var(--ink-2); letter-spacing: .06em; }
+    .hd__title { font-family: var(--mincho); font-weight: 900; font-size: 26px; margin: 2px 0 0; letter-spacing: .08em; color: var(--ai); }
+    .name { text-align: center; font-size: 24px; font-weight: 700; margin: 0 0 16px; word-break: break-all; }
+    .notice {
+      background: var(--shu); color: #fff; border-radius: 16px; padding: 18px 14px; margin: 0 0 22px;
+      text-align: center; font-size: 30px; font-weight: 800; line-height: 1.4; letter-spacing: .02em;
+      box-shadow: 0 4px 0 #8c2614;
+    }
+    .items { display: grid; gap: 16px; }
+    .item {
+      width: 100%; min-height: 120px; border: 0; border-radius: 18px; padding: 16px 14px;
+      background: var(--ai); color: #fff; box-shadow: 0 5px 0 #0e1620;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      transition: transform .08s ease, box-shadow .2s ease;
+    }
+    .item:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 #0e1620; }
+    .item__label { font-size: 26px; font-weight: 800; letter-spacing: .04em; }
+    .item__act { font-size: 22px; font-weight: 700; background: #fff; color: var(--ai); border-radius: 999px; padding: 4px 22px; }
+    .item.is-done { background: var(--ok-bg); color: var(--ok); box-shadow: none; border: 3px solid var(--ok); cursor: default; }
+    .item.is-done .item__act { background: transparent; color: var(--ok); font-size: 24px; padding: 0; }
+    .item.is-busy { opacity: .6; }
+    .msg { background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 24px 18px; text-align: center; margin-top: 8px; }
+    .msg__main { font-size: 24px; font-weight: 800; line-height: 1.5; margin: 0; }
+    .msg__sub { font-size: 17px; color: var(--ink-2); margin: 12px 0 0; }
+    .msg .btn { margin-top: 18px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 56px; padding: 10px 24px; border: 0; border-radius: 999px; font-weight: 700; font-size: 19px; }
+    .btn--primary { background: var(--ai); color: #fff; box-shadow: 0 4px 0 #0e1620; }
+    .btn--ghost { background: transparent; color: var(--ink-2); border: 2px solid var(--line); }
+    .loading { text-align: center; color: var(--ink-2); padding: 40px 0; font-size: 18px; }
+    .spin { width: 36px; height: 36px; border: 4px solid var(--line); border-top-color: var(--ai); border-radius: 50%; margin: 0 auto 14px; animation: r 1s linear infinite; }
+    @keyframes r { to { transform: rotate(360deg); } }
+    .toast { margin: 16px 0 0; text-align: center; color: var(--shu); font-weight: 700; font-size: 17px; min-height: 1em; }
+    /* 確認 */
+    .sheet { position: fixed; inset: 0; z-index: 10; display: flex; align-items: flex-end; justify-content: center; }
+    .sheet[hidden] { display: none; }
+    .sheet__bg { position: absolute; inset: 0; background: rgba(20, 16, 10, .55); }
+    .sheet__panel {
+      position: relative; width: 100%; max-width: 480px; background: var(--card); border-radius: 22px 22px 0 0;
+      padding: 26px 18px calc(22px + env(safe-area-inset-bottom)); text-align: center; animation: up .2s ease both;
+    }
+    @keyframes up { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .sheet__item { font-size: 20px; font-weight: 700; color: var(--ink-2); margin: 0; }
+    .sheet__q { font-size: 26px; font-weight: 800; line-height: 1.45; margin: 6px 0 8px; }
+    .sheet__warn { font-size: 18px; font-weight: 700; color: var(--shu); margin: 0 0 20px; }
+    .sheet__actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
+    .sheet__actions .btn { width: 100%; }
+    .foot { text-align: center; font-size: 14px; color: var(--ink-2); margin-top: 26px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="hd">
+      <div class="hd__sub">世界遺産石見銀山 東京マルシェ</div>
+      <h1 class="hd__title">来店者プレゼント</h1>
+    </header>
+    <div id="view"><div class="loading"><div class="spin"></div>読み込み中…</div></div>
+    <p class="foot">東京大田市人会</p>
+  </div>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet__bg" data-close></div>
+    <div class="sheet__panel" role="dialog" aria-modal="true">
+      <p class="sheet__item" id="sheet-item"></p>
+      <p class="sheet__q">スタッフの前で<br>押していますか？</p>
+      <p class="sheet__warn">押すと元に戻せません</p>
+      <div class="sheet__actions">
+        <button type="button" class="btn btn--ghost" data-close>もどる</button>
+        <button type="button" class="btn btn--primary" id="sheet-yes">受け取った</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    // 東京大田市人会 公式LINE：世界遺産石見銀山 東京マルシェ（2026-11-28）の来店者プレゼントの受け取り記録。
+    // メニュー「来店者プレゼント」→ https://liff.line.me/2010088280-T8UVyltM/present-axccpmatrg/ で開く。
+    // 本人の確認は LIFF のトークンを GAS（doGet）へ送り、GAS が LINE に問い合わせて行う。記録先は名簿「登録状況」の M・N 列
+    var LIFF_ID = '2010088280-T8UVyltM';
+    var API = 'https://script.google.com/macros/s/AKfycbzXdRRBMFe4aW-FXYUZnYX3LI_z0UfZW44QfIQ8_dWuRdRwRF2m-CBqPIa3cFEEqKCl/exec';
+    var ORDER = ['furikake', 'rice'];
+    var view = document.getElementById('view');
+    var sheet = document.getElementById('sheet');
+    var state = null, pending = null, sending = false;
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+    function showMessage(main, sub, retry) {
+      view.innerHTML = '<div class="msg"><p class="msg__main">' + main + '</p>' + (sub ? '<p class="msg__sub">' + sub + '</p>' : '') +
+        (retry ? '<button type="button" class="btn btn--primary" onclick="location.reload()">もう一度読み込む</button>' : '') + '</div>';
+    }
+
+    function tokens() {
+      var p = {};
+      try { var id = liff.getIDToken(); if (id) p.idToken = id; } catch (e) {}
+      try { var at = liff.getAccessToken(); if (at) p.accessToken = at; } catch (e) {}
+      return p;
+    }
+
+    function call(params) {
+      var t = tokens(), q = [];
+      Object.keys(params).forEach(function (k) { q.push(k + '=' + encodeURIComponent(params[k])); });
+      Object.keys(t).forEach(function (k) { q.push(k + '=' + encodeURIComponent(t[k])); });
+      return fetch(API + '?' + q.join('&'), { method: 'GET', redirect: 'follow', cache: 'no-store' }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      });
+    }
+
+    function handle(res) {
+      if (res.state === 'ok') { state = res; render(); return; }
+      if (res.state === 'member') {
+        showMessage('会員の方は、<br>名札を受付でお見せください', res.name ? esc(res.name) + ' 様' : '');
+      } else if (res.state === 'unregistered') {
+        showMessage('LINEの登録を<br>最後まで済ませてください', 'トーク画面の質問（会員かどうか・お名前）にお答えいただくと、このページが使えます');
+      } else if (res.state === 'notTarget') {
+        showMessage('このページは、<br>ただいまご利用いただけません');
+      } else if (res.state === 'invalid') {
+        showMessage('ご本人の確認が<br>できませんでした', 'いったん閉じて、LINEのメニュー「来店者プレゼント」から開き直してください', false);
+      } else if (res.state === 'busy') {
+        toast('混み合っています。もう一度押してください');
+      } else {
+        showMessage('うまく読み込めませんでした', 'いったん閉じて、開き直してください', true);
+      }
+    }
+
+    function render() {
+      var html = '<p class="name">' + esc(state.name || 'お客') + ' 様</p>' +
+        '<div class="notice">受付のスタッフの前で<br>ボタンを押してください</div><div class="items">';
+      ORDER.forEach(function (key) {
+        var it = state.items[key];
+        if (!it) return;
+        if (it.at) {
+          html += '<button type="button" class="item is-done" disabled><span class="item__label">' + esc(it.label) + '</span>' +
+            '<span class="item__act">✅ 受け取り済み ' + esc(it.at) + '</span></button>';
+        } else {
+          html += '<button type="button" class="item" data-item="' + key + '"><span class="item__label">' + esc(it.label) + '</span>' +
+            '<span class="item__act">受け取った</span></button>';
+        }
+      });
+      html += '</div><p class="toast" id="toast"></p>';
+      view.innerHTML = html;
+    }
+
+    function toast(s) { var t = document.getElementById('toast'); if (t) t.textContent = s; }
+
+    view.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-item]');
+      if (!b || b.disabled || sending) return;
+      pending = b.getAttribute('data-item');
+      document.getElementById('sheet-item').textContent = state.items[pending].label;
+      sheet.hidden = false;
+    });
+    sheet.addEventListener('click', function (e) {
+      if (e.target.closest('[data-close]')) { sheet.hidden = true; pending = null; }
+    });
+    document.getElementById('sheet-yes').addEventListener('click', function () {
+      var key = pending;
+      sheet.hidden = true; pending = null;
+      if (!key || sending) return;
+      sending = true;
+      var b = view.querySelector('[data-item="' + key + '"]');
+      if (b) { b.disabled = true; b.classList.add('is-busy'); b.querySelector('.item__act').textContent = '記録しています…'; }
+      call({ action: 'receive', item: key }).then(function (res) {
+        sending = false;
+        if (res.state === 'busy') { render(); toast('混み合っています。もう一度押してください'); return; }
+        handle(res);
+      }).catch(function () {
+        sending = false;
+        render();
+        toast('通信できませんでした。もう一度押してください');
+      });
+    });
+
+    function start() {
+      if (!liff.isInClient()) {
+        showMessage('LINEアプリで開いてください', '東京大田市人会の公式LINEのメニュー「来店者プレゼント」から開けます');
+        return;
+      }
+      if (!liff.isLoggedIn()) { liff.login(); return; }
+      call({ action: 'status' }).then(handle).catch(function () {
+        showMessage('通信できませんでした', '電波の良いところで、もう一度お試しください', true);
+      });
+    }
+
+    liff.init({ liffId: LIFF_ID }).then(start).catch(function (e) {
+      console.error(e);
+      showMessage('LINEアプリで開いてください', '東京大田市人会の公式LINEのメニュー「来店者プレゼント」から開けます');
+    });
+  </script>
+</body>
+</html>

@@ -32,14 +32,25 @@
   var ENTRY_CONTACT = '723589695';          // ご案内方法について（チェックボックス）
   var CONTACT_DEFAULT = 'LINE連絡';          // LINE から開いた人は「LINE連絡」にチェック済みで開く
   var moved = false;
+  // https://liff.line.me/{LIFF_ID}/present-…/ のようにパス付きで開かれたときは、LIFF がまずこのページを
+  // ?liff.state=/present-…/ 付きで開き、liff.init() がそのページへ移動させる。その間に出欠フォームへ飛ばさない
+  var LIFF_STATE = new URLSearchParams(location.search).get('liff.state') || '';
+  var TO_SUBPAGE = /^\/[A-Za-z0-9_-]/.test(LIFF_STATE);
+  if (TO_SUBPAGE) {
+    document.querySelector('h1').textContent = '東京大田市人会';
+    document.getElementById('msg').innerHTML = 'ページを開いています…';
+    // 念のため：LIFF の移動が起きなければ自分で移動する
+    setTimeout(function(){ location.replace(location.pathname.replace(/\/$/, '') + LIFF_STATE); }, 5000);
+  }
   function go(userId){
-    if (moved) return; moved = true;
+    if (moved || TO_SUBPAGE) return; moved = true;
     var url = FORM_URL + '?usp=pp_url&entry.' + ENTRY_CONTACT + '=' + encodeURIComponent(CONTACT_DEFAULT)
             + (userId ? '&entry.' + ENTRY + '=' + encodeURIComponent(userId) : '');
     document.getElementById('btn').href = url;
     location.replace(url);
   }
   function showButton(){
+    if (TO_SUBPAGE) return;
     document.getElementById('spin').style.display = 'none';
     document.getElementById('msg').innerHTML = '自動で開かない場合は、下のボタンを押してください';
     document.getElementById('btn').style.display = 'inline-block';
