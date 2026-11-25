@@ -221,6 +221,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
 /* 称号の色（金＝100点はもとの .title-badge のまま） */
 .tb--shine  { color: #1f2630; background: var(--silver-grad); box-shadow: 0 0 0 3px #39414c inset, 0 0 26px rgba(230,236,245,.8); animation: shineSilver 2.4s ease-in-out infinite; }
 .tb--silver { color: #1f2630; background: var(--silver-grad); box-shadow: 0 0 0 3px #39414c inset; animation: none; }
+.tb--ibushi { color: #f4f5f7; background: linear-gradient(180deg, #b9bec5 0%, #868c94 50%, #63686f 100%); box-shadow: 0 0 0 3px #3a3e44 inset; animation: none; }
 .tb--iron   { color: #f0f2f4; background: linear-gradient(180deg, #8d949c 0%, #5d646c 50%, #444a51 100%); box-shadow: 0 0 0 3px #2b2f34 inset; animation: none; }
 .tb--bronze { color: #2e1607; background: linear-gradient(180deg, #f3c39a 0%, #c9814b 50%, #8f5124 100%); box-shadow: 0 0 0 3px #4a250c inset; animation: none; }
 .tb--gray   { color: #f2f2f2; background: #6b6f75; box-shadow: 0 0 0 3px #45484d inset; animation: none; }

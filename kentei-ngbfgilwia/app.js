@@ -464,12 +464,13 @@
     return "チャレンジおめでとう！";
   }
 
-  // 点数ごとの称号（2026-11-26 kacky 確定）。cls は色（style.css の .tb--◯◯）
+  // 点数ごとの称号（2026-11-26 kacky 確定・同日に7段階へ）。cls は色（style.css の .tb--◯◯）
   function titleFor(s) {
     if (s >= 100) return { cls: "gold",   head: "満点合格の称号", name: "石見銀山 銀山奉行", line: "" };
     if (s >= 90)  return { cls: "shine",  head: "あなたの称号", name: "大森代官", line: "あと一歩で奉行じゃ、惜しい！" };
-    if (s >= 70)  return { cls: "silver", head: "あなたの称号", name: "腕ききの山師（やまし）", line: "安原伝兵衛も一目置く目利き" };
-    if (s >= 50)  return { cls: "iron",   head: "あなたの称号", name: "一人前の銀掘（かねほり）", line: "間歩に入ってよし！" };
+    if (s >= 80)  return { cls: "silver", head: "あなたの称号", name: "腕ききの山師（やまし）", line: "安原伝兵衛も一目置く目利き" };
+    if (s >= 70)  return { cls: "ibushi", head: "あなたの称号", name: "一人前の銀掘（かねほり）", line: "間歩に入ってよし！" };
+    if (s >= 50)  return { cls: "iron",   head: "あなたの称号", name: "駆け出しの銀掘（かねほり）", line: "一人前まで、あと少し！" };
     if (s >= 10)  return { cls: "bronze", head: "あなたの称号", name: "見習い掘子（ほりこ）", line: "掘った石を運ぶところから修業じゃ" };
     return { cls: "gray", head: "あなたの称号", name: "間歩（まぶ）で迷子の野良犬 🐕", line: "ワン！ 出直してくるワン" };
   }
