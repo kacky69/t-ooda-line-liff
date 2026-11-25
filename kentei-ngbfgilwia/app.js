@@ -12,7 +12,7 @@
 
   var QUIZ = window.QUIZ || [];
   var LETTERS = ["A", "B", "C"];
-  var KEY = "iwami_kentei_20261128";
+  var KEY = "iwami_kentei_20261128_r2"; // 2026-11-26 運営に解き直してもらうため名前を変えた（前の解答は読まない）
   var RESET_VALUE = "ooda1128";
   // 確認期間中は true：結果画面のいちばん下に「もう1回解く」を出す（運営が何回も試すため・2026-11-26 kacky 指示でこれだけ残す）
   // ⚠️ 本番（11/28）の直前に必ず false にする。false で「もう1回解く」が消え、1回解いたら結果画面のまま
