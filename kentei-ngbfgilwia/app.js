@@ -16,7 +16,7 @@
   var RESET_VALUE = "ooda1128";
   // 確認期間中は true：結果画面のいちばん下に「もう1回解く」を出す（運営が何回も試すため・2026-11-26 kacky 指示でこれだけ残す）
   // ⚠️ 本番（11/28）の直前に必ず false にする。false で「もう1回解く」が消え、1回解いたら結果画面のまま
-  var RETRY_BUTTON = true;
+  var RETRY_BUTTON = false;
   var COOKIE_PATH = location.pathname.replace(/[^/]*$/, "") || "/";
 
   var app = document.getElementById("app");
